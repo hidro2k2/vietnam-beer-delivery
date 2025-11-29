@@ -1,0 +1,28 @@
+.checkout-section {
+    padding-bottom: var(--spacing-xxl);
+}
+
+.checkout-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--spacing-lg);
+}
+
+@media (min-width: 1024px) {
+    .checkout-grid {
+        grid-template-columns: 2fr 1fr;
+        align-items: start;
+    }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+    .checkout-section {
+        padding-bottom: var(--spacing-lg);
+    }
+
+    .checkout-grid {
+        gap: var(--spacing-md);
+        padding: 0 var(--spacing-sm);
+    }
+}

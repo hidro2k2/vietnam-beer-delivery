@@ -1,0 +1,140 @@
+.cart-summary {
+    position: sticky;
+    top: 80px;
+}
+
+.summary-title {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-md);
+    color: var(--color-primary);
+    text-align: center;
+}
+
+.cart-items {
+    margin-bottom: var(--spacing-md);
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.95rem;
+    gap: 8px;
+}
+
+.item-info {
+    display: flex;
+    justify-content: space-between;
+    flex: 1;
+}
+
+.item-qty {
+    font-weight: 700;
+    color: var(--color-primary);
+}
+
+.remove-item-btn {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    transition: color 0.2s;
+}
+
+.remove-item-btn:hover {
+    color: var(--color-primary);
+}
+
+.cart-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: var(--spacing-md) 0;
+}
+
+.cart-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xs);
+    color: var(--color-text-muted);
+}
+
+.cart-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-lg);
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+}
+
+.total-amount {
+    color: var(--color-primary);
+    font-size: 1.5rem;
+}
+
+.place-order-btn {
+    width: 100%;
+    font-size: 1.1rem;
+    padding: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.note-text {
+    font-size: 0.875rem;
+    color: var(--color-text-muted);
+    margin-top: var(--spacing-sm);
+}
+
+.empty-text {
+    text-align: center;
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-xs);
+}
+
+.empty-subtext {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+}
+
+/* Mobile responsive styles */
+@media (max-width: 768px) {
+    .cart-summary {
+        position: static;
+        top: auto;
+    }
+
+    .summary-title {
+        font-size: 1.3rem;
+    }
+
+    .cart-items {
+        max-height: 250px;
+    }
+
+    .cart-item {
+        font-size: 0.9rem;
+    }
+
+    .total-row {
+        font-size: 1.1rem;
+    }
+
+    .total-amount {
+        font-size: 1.3rem;
+    }
+
+    .place-order-btn {
+        font-size: 1rem;
+        padding: 14px;
+    }
+}

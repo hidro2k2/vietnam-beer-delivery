@@ -1,0 +1,94 @@
+.floating-contact-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    z-index: 9999;
+}
+
+.floating-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    text-decoration: none;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease;
+    position: relative;
+    animation: pulse-shake 2s infinite;
+}
+
+.floating-btn:hover {
+    transform: scale(1.1);
+}
+
+.zalo-btn {
+    background-color: #0068FF;
+}
+
+.phone-btn {
+    background-color: #d32f2f;
+    animation-delay: 1s;
+}
+
+.btn-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Pulse and Shake Animation */
+@keyframes pulse-shake {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7);
+    }
+
+    5% {
+        transform: scale(1.1) rotate(-5deg);
+    }
+
+    10% {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    15% {
+        transform: scale(1.1) rotate(-5deg);
+    }
+
+    20% {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    25% {
+        transform: scale(1);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+    }
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+    .floating-contact-container {
+        bottom: 15px;
+        right: 15px;
+        gap: 10px;
+    }
+
+    .floating-btn {
+        width: 45px;
+        height: 45px;
+    }
+}
