@@ -98,15 +98,13 @@ ${itemsList}
 ━━━━━━━━━━━━━━━━━
     `.trim();
 
-    // Inline keyboard for quick actions
+    // Inline keyboard for quick actions - only show relevant buttons for pending orders
     const keyboard = {
         inline_keyboard: [
             [
-                { text: '✅ Xác nhận', callback_data: `confirm_${order.order_code}` },
-                { text: '🚚 Đang giao', callback_data: `delivering_${order.order_code}` }
+                { text: '🚚 Nhận đơn & Giao hàng', callback_data: `delivering_${order.order_code}` }
             ],
             [
-                { text: '✔️ Hoàn thành', callback_data: `done_${order.order_code}` },
                 { text: '❌ Hủy đơn', callback_data: `cancel_${order.order_code}` }
             ]
         ]

@@ -1,11 +1,15 @@
-// Vercel Serverless Function for Telegram Bot
+// Vercel Serverless Function for Telegram Bot with Supabase Integration
+import { createClient } from '@supabase/supabase-js';
+
 const TELEGRAM_BOT_TOKEN = '8523016465:AAHKXLLEX3R8OJ0EOFtUUCANNiQ94UfhUmY';
 const TELEGRAM_CHAT_ID = '6482362126';
 const TELEGRAM_API = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}`;
 
-// Supabase connection for order management
-const SUPABASE_URL = 'https://xyzcompany.supabase.co'; // Will be replaced by env var
-const SUPABASE_KEY = process.env.SUPABASE_KEY || '';
+// Supabase connection
+const SUPABASE_URL = 'https://xvcereevlxybmdvcfost.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2Y2VyZWV2bHh5Ym1kdmNmb3N0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQzMjIwNjYsImV4cCI6MjA3OTg5ODA2Nn0.PFuaFbneZvqUA-JuDnqnaqJoaCcb6MwKIVy_tfQkgOc';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /**
  * Send message to Telegram
@@ -36,25 +40,73 @@ async function answerCallback(callbackQueryId, text = '') {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             callback_query_id: callbackQueryId,
-            text: text
+            text: text,
+            show_alert: true
         }),
     });
 }
 
 /**
- * Edit message (update buttons after action)
+ * Edit message with new buttons
  */
-async function editMessage(chatId, messageId, text) {
-    await fetch(`${TELEGRAM_API}/editMessageText`, {
+async function editMessageReplyMarkup(chatId, messageId, replyMarkup) {
+    await fetch(`${TELEGRAM_API}/editMessageReplyMarkup`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             chat_id: chatId,
             message_id: messageId,
-            text: text,
-            parse_mode: 'HTML'
+            reply_markup: replyMarkup
         }),
     });
+}
+
+/**
+ * Get buttons based on order status
+ */
+function getButtonsForStatus(orderCode, status) {
+    switch (status) {
+        case 'pending':
+            return {
+                inline_keyboard: [
+                    [
+                        { text: '🚚 Nhận đơn & Giao hàng', callback_data: `delivering_${orderCode}` }
+                    ],
+                    [
+                        { text: '❌ Hủy đơn', callback_data: `cancel_${orderCode}` }
+                    ]
+                ]
+            };
+        case 'delivering':
+            return {
+                inline_keyboard: [
+                    [
+                        { text: '✅ Hoàn thành đơn', callback_data: `done_${orderCode}` }
+                    ],
+                    [
+                        { text: '❌ Hủy đơn', callback_data: `cancel_${orderCode}` }
+                    ]
+                ]
+            };
+        case 'done':
+            return {
+                inline_keyboard: [
+                    [
+                        { text: '✔️ Đã hoàn thành', callback_data: 'noop' }
+                    ]
+                ]
+            };
+        case 'cancelled':
+            return {
+                inline_keyboard: [
+                    [
+                        { text: '❌ Đã hủy', callback_data: 'noop' }
+                    ]
+                ]
+            };
+        default:
+            return { inline_keyboard: [] };
+    }
 }
 
 /**
@@ -68,8 +120,8 @@ async function handleCommand(command, chatId) {
 
 Bot này giúp bạn quản lý đơn hàng:
 • Nhận thông báo đơn mới tự động
-• Cập nhật trạng thái đơn hàng
-• Xem thống kê doanh thu
+• Cập nhật trạng thái đơn hàng trực tiếp
+• Đồng bộ với website real-time
 
 Sử dụng /help để xem các lệnh.
             `.trim());
@@ -78,34 +130,24 @@ Sử dụng /help để xem các lệnh.
             return sendMessage(chatId, `
 📋 <b>DANH SÁCH LỆNH</b>
 
-/orders - Xem tất cả đơn hàng
-/pending - Đơn hàng mới (chờ xử lý)
-/delivering - Đơn đang giao
-/done - Đơn hoàn thành
-/today - Doanh thu hôm nay
-/revenue - Thống kê doanh thu
-/help - Hiển thị trợ giúp này
+/pending - Xem đơn hàng mới
+/delivering - Xem đơn đang giao
+/done - Xem đơn hoàn thành
+/stats - Thống kê nhanh
+/help - Hiển thị trợ giúp
             `.trim());
 
-        case '/orders':
         case '/pending':
+            return await showOrdersByStatus(chatId, 'pending', '⏳ ĐƠN HÀNG MỚI');
+
         case '/delivering':
+            return await showOrdersByStatus(chatId, 'delivering', '🚚 ĐƠN ĐANG GIAO');
+
         case '/done':
-            return sendMessage(chatId, `
-📦 <b>Tính năng đang phát triển</b>
+            return await showOrdersByStatus(chatId, 'done', '✅ ĐƠN HOÀN THÀNH');
 
-Vui lòng truy cập Admin Dashboard để xem danh sách đơn hàng:
-👉 https://vietnam-beer-delivery.vercel.app/admin/dashboard
-            `.trim());
-
-        case '/today':
-        case '/revenue':
-            return sendMessage(chatId, `
-📊 <b>Tính năng đang phát triển</b>
-
-Vui lòng truy cập Admin Dashboard để xem thống kê:
-👉 https://vietnam-beer-delivery.vercel.app/admin/stats
-            `.trim());
+        case '/stats':
+            return await showStats(chatId);
 
         default:
             return sendMessage(chatId, '❓ Lệnh không hợp lệ. Sử dụng /help để xem các lệnh.');
@@ -113,7 +155,90 @@ Vui lòng truy cập Admin Dashboard để xem thống kê:
 }
 
 /**
- * Handle button callbacks
+ * Show orders by status
+ */
+async function showOrdersByStatus(chatId, status, title) {
+    try {
+        const { data: orders, error } = await supabase
+            .from('orders')
+            .select('*')
+            .eq('status', status)
+            .order('created_at', { ascending: false })
+            .limit(10);
+
+        if (error) throw error;
+
+        if (!orders || orders.length === 0) {
+            return sendMessage(chatId, `${title}\n\n📭 Không có đơn hàng nào.`);
+        }
+
+        let message = `${title}\n━━━━━━━━━━━━━━━━━\n\n`;
+
+        for (const order of orders) {
+            const time = new Date(order.created_at).toLocaleString('vi-VN');
+            const total = new Intl.NumberFormat('vi-VN').format(order.total);
+            message += `📦 <b>#${order.order_code}</b>\n`;
+            message += `👤 ${order.customer_name}\n`;
+            message += `💰 ${total}₫\n`;
+            message += `⏰ ${time}\n\n`;
+        }
+
+        message += `Tổng: <b>${orders.length}</b> đơn`;
+
+        return sendMessage(chatId, message);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        return sendMessage(chatId, '❌ Có lỗi khi tải đơn hàng.');
+    }
+}
+
+/**
+ * Show quick stats
+ */
+async function showStats(chatId) {
+    try {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Get all orders
+        const { data: allOrders, error } = await supabase
+            .from('orders')
+            .select('*');
+
+        if (error) throw error;
+
+        const pending = allOrders.filter(o => o.status === 'pending').length;
+        const delivering = allOrders.filter(o => o.status === 'delivering').length;
+        const done = allOrders.filter(o => o.status === 'done').length;
+
+        // Today's revenue
+        const todayOrders = allOrders.filter(o => {
+            const orderDate = new Date(o.created_at);
+            return orderDate >= today && o.status === 'done';
+        });
+        const todayRevenue = todayOrders.reduce((sum, o) => sum + o.total, 0);
+
+        const message = `
+📊 <b>THỐNG KÊ NHANH</b>
+━━━━━━━━━━━━━━━━━
+
+⏳ Đơn mới: <b>${pending}</b>
+🚚 Đang giao: <b>${delivering}</b>
+✅ Hoàn thành: <b>${done}</b>
+
+💰 Doanh thu hôm nay: <b>${new Intl.NumberFormat('vi-VN').format(todayRevenue)}₫</b>
+📦 Đơn hoàn thành hôm nay: <b>${todayOrders.length}</b>
+        `.trim();
+
+        return sendMessage(chatId, message);
+    } catch (error) {
+        console.error('Error fetching stats:', error);
+        return sendMessage(chatId, '❌ Có lỗi khi tải thống kê.');
+    }
+}
+
+/**
+ * Handle button callbacks - UPDATE SUPABASE DIRECTLY
  */
 async function handleCallback(callbackQuery) {
     const chatId = callbackQuery.message.chat.id;
@@ -121,40 +246,106 @@ async function handleCallback(callbackQuery) {
     const data = callbackQuery.data;
     const callbackId = callbackQuery.id;
 
-    // Parse callback data: action_orderCode
-    const [action, orderCode] = data.split('_');
-
-    const statusMap = {
-        'confirm': { status: 'confirmed', text: '✅ Đã xác nhận', emoji: '✅' },
-        'delivering': { status: 'delivering', text: '🚚 Đang giao hàng', emoji: '🚚' },
-        'done': { status: 'done', text: '✔️ Hoàn thành', emoji: '✔️' },
-        'cancel': { status: 'cancelled', text: '❌ Đã hủy', emoji: '❌' }
-    };
-
-    const statusInfo = statusMap[action];
-    if (!statusInfo) {
-        await answerCallback(callbackId, '❓ Hành động không hợp lệ');
+    // Ignore noop callbacks
+    if (data === 'noop') {
+        await answerCallback(callbackId, 'Đơn hàng đã được xử lý');
         return;
     }
 
-    // Acknowledge the button press
-    await answerCallback(callbackId, statusInfo.text);
+    // Parse callback data: action_orderCode
+    const [action, orderCode] = data.split('_');
 
-    // Update the message to show status changed
-    const originalText = callbackQuery.message.text;
-    const updatedText = `${originalText}\n\n${statusInfo.emoji} <b>Trạng thái:</b> ${statusInfo.text}`;
+    // First, get current order status from database
+    const { data: orderData, error: fetchError } = await supabase
+        .from('orders')
+        .select('*')
+        .eq('order_code', orderCode)
+        .single();
 
-    await editMessage(chatId, messageId, updatedText);
+    if (fetchError || !orderData) {
+        await answerCallback(callbackId, '❌ Không tìm thấy đơn hàng!');
+        return;
+    }
 
-    // Send confirmation
+    const currentStatus = orderData.status;
+
+    // Validate state transitions
+    const validTransitions = {
+        'pending': ['delivering', 'cancel'],
+        'delivering': ['done', 'cancel'],
+        'done': [],
+        'cancelled': []
+    };
+
+    const newStatus = action === 'cancel' ? 'cancelled' : action;
+
+    if (!validTransitions[currentStatus]?.includes(action === 'cancel' ? 'cancel' : newStatus)) {
+        await answerCallback(callbackId, `⚠️ Không thể chuyển từ "${currentStatus}" sang "${newStatus}"`);
+        return;
+    }
+
+    // Handle cancel - DELETE from database
+    if (action === 'cancel') {
+        const { error: deleteError } = await supabase
+            .from('orders')
+            .delete()
+            .eq('order_code', orderCode);
+
+        if (deleteError) {
+            await answerCallback(callbackId, '❌ Lỗi khi hủy đơn!');
+            return;
+        }
+
+        await answerCallback(callbackId, '🗑️ Đã hủy và xóa đơn hàng!');
+
+        // Update buttons to show cancelled
+        await editMessageReplyMarkup(chatId, messageId, getButtonsForStatus(orderCode, 'cancelled'));
+
+        // Send confirmation
+        await sendMessage(chatId, `
+❌ <b>ĐÃ HỦY ĐƠN HÀNG</b>
+
+📦 Mã đơn: <b>#${orderCode}</b>
+👤 Khách: ${orderData.customer_name}
+🗑️ Đơn hàng đã bị xóa khỏi hệ thống
+⏰ Lúc: ${new Date().toLocaleString('vi-VN')}
+        `.trim());
+        return;
+    }
+
+    // Update status in Supabase
+    const { error: updateError } = await supabase
+        .from('orders')
+        .update({ status: newStatus })
+        .eq('order_code', orderCode);
+
+    if (updateError) {
+        await answerCallback(callbackId, '❌ Lỗi khi cập nhật!');
+        return;
+    }
+
+    const statusInfo = {
+        'delivering': { text: '🚚 Đang giao hàng', alert: 'Đã nhận đơn! Bắt đầu giao hàng.' },
+        'done': { text: '✅ Hoàn thành', alert: 'Đơn hàng đã hoàn thành!' }
+    };
+
+    const info = statusInfo[newStatus];
+
+    // Acknowledge button press
+    await answerCallback(callbackId, info.alert);
+
+    // Update buttons based on new status
+    await editMessageReplyMarkup(chatId, messageId, getButtonsForStatus(orderCode, newStatus));
+
+    // Send confirmation message
     await sendMessage(chatId, `
-${statusInfo.emoji} <b>CẬP NHẬT THÀNH CÔNG</b>
+${info.text.split(' ')[0]} <b>CẬP NHẬT THÀNH CÔNG</b>
 
-📦 Đơn hàng: <b>#${orderCode}</b>
-📊 Trạng thái mới: <b>${statusInfo.text}</b>
-
-⚠️ <i>Lưu ý: Vui lòng cập nhật trạng thái trên Admin Dashboard để đồng bộ với hệ thống.</i>
-👉 https://vietnam-beer-delivery.vercel.app/admin/dashboard
+📦 Mã đơn: <b>#${orderCode}</b>
+👤 Khách: ${orderData.customer_name}
+📍 Địa chỉ: ${orderData.customer_address}
+📊 Trạng thái: <b>${info.text}</b>
+⏰ Lúc: ${new Date().toLocaleString('vi-VN')}
     `.trim());
 }
 
@@ -188,7 +379,7 @@ export default async function handler(req, res) {
                 const chatId = body.message.chat.id;
 
                 if (text.startsWith('/')) {
-                    await handleCommand(text, chatId);
+                    await handleCommand(text.split('@')[0], chatId);
                 }
             }
 
