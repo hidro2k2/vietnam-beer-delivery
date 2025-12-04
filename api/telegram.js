@@ -1,41 +1,45 @@
 // Vercel Serverless Function for Telegram Notifications
-export const config = {
-    runtime: 'edge',
-};
-
 const TELEGRAM_BOT_TOKEN = '8523016465:AAHKxLLEX3R80J0E0FtUUCANNiQ94UfhUmY';
 const TELEGRAM_CHAT_ID = '6482362126';
 
-export default async function handler(request) {
-    // Handle CORS preflight
-    if (request.method === 'OPTIONS') {
-        return new Response(null, {
-            status: 200,
-            headers: {
-                'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST, OPTIONS',
-                'Access-Control-Allow-Headers': 'Content-Type',
-            },
-        });
+export default async function handler(req, res) {
+    // Enable CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    // Handle preflight
+    if (req.method === 'OPTIONS') {
+        res.status(200).end();
+        return;
     }
 
-    if (request.method !== 'POST') {
-        return new Response(JSON.stringify({ error: 'Method not allowed' }), {
-            status: 405,
-            headers: { 'Content-Type': 'application/json' },
-        });
+    // Only allow POST
+    if (req.method !== 'POST') {
+        res.status(405).json({ error: 'Method not allowed' });
+        return;
     }
 
     try {
-        const body = await request.json();
-        const { text, reply_markup } = body;
+        const { text, reply_markup } = req.body || {};
 
         if (!text) {
-            return new Response(JSON.stringify({ error: 'Missing text field' }), {
-                status: 400,
-                headers: { 'Content-Type': 'application/json' },
-            });
+            res.status(400).json({ error: 'Missing text field' });
+            return;
         }
+
+        // Build request body
+        const telegramBody = {
+            chat_id: TELEGRAM_CHAT_ID,
+            text: text,
+            parse_mode: 'HTML'
+        };
+
+        if (reply_markup) {
+            telegramBody.reply_markup = reply_markup;
+        }
+
+        console.log('Sending to Telegram:', telegramBody);
 
         const telegramResponse = await fetch(
             `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -44,43 +48,28 @@ export default async function handler(request) {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: text,
-                    parse_mode: 'HTML',
-                    reply_markup: reply_markup
-                }),
+                body: JSON.stringify(telegramBody),
             }
         );
 
         const data = await telegramResponse.json();
+        console.log('Telegram response:', data);
 
         if (!data.ok) {
             console.error('Telegram API error:', data);
-            return new Response(JSON.stringify({ error: 'Telegram API error', details: data }), {
-                status: 500,
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Access-Control-Allow-Origin': '*',
-                },
+            res.status(500).json({
+                error: 'Telegram API error',
+                details: data
             });
+            return;
         }
 
-        return new Response(JSON.stringify({ success: true, result: data.result }), {
-            status: 200,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-            },
-        });
+        res.status(200).json({ success: true, result: data.result });
     } catch (error) {
-        console.error('Error sending Telegram message:', error);
-        return new Response(JSON.stringify({ error: 'Internal server error', message: error.message }), {
-            status: 500,
-            headers: {
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*',
-            },
+        console.error('Error:', error);
+        res.status(500).json({
+            error: 'Internal server error',
+            message: error.message
         });
     }
 }
