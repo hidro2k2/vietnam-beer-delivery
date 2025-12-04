@@ -73,7 +73,7 @@ const AdminProductManager = () => {
             const filePath = `${fileName}`;
 
             const { error: uploadError } = await supabase.storage
-                .from('products')
+                .from('product-images')
                 .upload(filePath, file);
 
             if (uploadError) {
@@ -81,7 +81,7 @@ const AdminProductManager = () => {
             }
 
             const { data } = supabase.storage
-                .from('products')
+                .from('product-images')
                 .getPublicUrl(filePath);
 
             return data.publicUrl;
