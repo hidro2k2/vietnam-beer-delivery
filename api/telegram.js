@@ -1,26 +1,40 @@
 // Vercel Serverless Function for Telegram Notifications
-const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN || '8523016465:AAHKxLLEX3R80J0E0FtUUCANNiQ94UfhUmY';
-const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID || '6482362126';
+export const config = {
+    runtime: 'edge',
+};
 
-export default async function handler(req, res) {
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+const TELEGRAM_BOT_TOKEN = '8523016465:AAHKxLLEX3R80J0E0FtUUCANNiQ94UfhUmY';
+const TELEGRAM_CHAT_ID = '6482362126';
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+export default async function handler(request) {
+    // Handle CORS preflight
+    if (request.method === 'OPTIONS') {
+        return new Response(null, {
+            status: 200,
+            headers: {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST, OPTIONS',
+                'Access-Control-Allow-Headers': 'Content-Type',
+            },
+        });
     }
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
+    if (request.method !== 'POST') {
+        return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+            status: 405,
+            headers: { 'Content-Type': 'application/json' },
+        });
     }
 
     try {
-        const { text, reply_markup } = req.body;
+        const body = await request.json();
+        const { text, reply_markup } = body;
 
         if (!text) {
-            return res.status(400).json({ error: 'Missing text field' });
+            return new Response(JSON.stringify({ error: 'Missing text field' }), {
+                status: 400,
+                headers: { 'Content-Type': 'application/json' },
+            });
         }
 
         const telegramResponse = await fetch(
@@ -43,12 +57,30 @@ export default async function handler(req, res) {
 
         if (!data.ok) {
             console.error('Telegram API error:', data);
-            return res.status(500).json({ error: 'Telegram API error', details: data });
+            return new Response(JSON.stringify({ error: 'Telegram API error', details: data }), {
+                status: 500,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Access-Control-Allow-Origin': '*',
+                },
+            });
         }
 
-        return res.status(200).json({ success: true, result: data.result });
+        return new Response(JSON.stringify({ success: true, result: data.result }), {
+            status: 200,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+            },
+        });
     } catch (error) {
         console.error('Error sending Telegram message:', error);
-        return res.status(500).json({ error: 'Internal server error', message: error.message });
+        return new Response(JSON.stringify({ error: 'Internal server error', message: error.message }), {
+            status: 500,
+            headers: {
+                'Content-Type': 'application/json',
+                'Access-Control-Allow-Origin': '*',
+            },
+        });
     }
 }
