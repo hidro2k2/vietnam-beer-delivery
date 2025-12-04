@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogOut, MapPin, X, BarChart3, Package } from 'lucide-react';
 import { supabase, formatOrderFromSupabase } from '../lib/supabase';
+import { sendOrderStatusUpdate } from '../lib/telegram';
 import '../styles/admin.css';
 
 const AdminDashboard = () => {
@@ -60,6 +61,9 @@ const AdminDashboard = () => {
 
     const updateStatus = async (orderCode, newStatus) => {
         try {
+            // Find the order to get customer name
+            const order = orders.find(o => o.id === orderCode);
+
             const { error } = await supabase
                 .from('orders')
                 .update({ status: newStatus })
@@ -74,6 +78,11 @@ const AdminDashboard = () => {
 
             if (selectedOrder && selectedOrder.id === orderCode) {
                 setSelectedOrder({ ...selectedOrder, status: newStatus });
+            }
+
+            // Send Telegram notification
+            if (order) {
+                sendOrderStatusUpdate(orderCode, newStatus, order.customer.name);
             }
         } catch (error) {
             console.error('Error updating status:', error);

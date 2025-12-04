@@ -8,6 +8,7 @@ import OrderForm from '../components/customer/OrderForm';
 import CartSummary from '../components/customer/CartSummary';
 import { useCart } from '../context/CartContext';
 import { supabase, formatOrderForSupabase } from '../lib/supabase';
+import { sendNewOrderNotification } from '../lib/telegram';
 import '../styles/home.css';
 
 const Home = () => {
@@ -99,6 +100,15 @@ const Home = () => {
             };
 
             console.log('Navigating to success page with order:', order);
+
+            // Send Telegram notification (async, don't wait)
+            sendNewOrderNotification(order).then(result => {
+                if (result) {
+                    console.log('Telegram notification sent successfully');
+                } else {
+                    console.log('Failed to send Telegram notification');
+                }
+            });
 
             // Clear cart and redirect
             clearCart();
