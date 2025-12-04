@@ -4,6 +4,7 @@ import { CartProvider } from './context/CartContext';
 import Home from './pages/Home';
 import OrderSuccess from './pages/OrderSuccess';
 import OrderTracking from './pages/OrderTracking';
+import OrderHistory from './pages/OrderHistory';
 import Contact from './pages/Contact';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
@@ -22,6 +23,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/success" element={<OrderSuccess />} />
             <Route path="/track-order" element={<OrderTracking />} />
+            <Route path="/order-history" element={<OrderHistory />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/admin" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />

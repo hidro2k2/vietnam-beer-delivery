@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Phone, ShoppingBag, User, Menu, X, ShoppingCart } from 'lucide-react';
+import { Phone, ShoppingBag, User, Menu, X, ShoppingCart, History } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 import '../../styles/header.css';
 
@@ -38,6 +38,10 @@ const Header = () => {
                 <nav className="nav-menu desktop-menu">
                     <Link to="/" className="nav-link">Đặt hàng</Link>
                     <Link to="/track-order" className="nav-link">Tra cứu đơn hàng</Link>
+                    <Link to="/order-history" className="nav-link">
+                        <History size={16} />
+                        Lịch sử
+                    </Link>
                     <Link to="/contact" className="nav-link">Liên hệ</Link>
                     <Link to="/admin" className="nav-link admin-link">
                         <User size={16} />
@@ -80,6 +84,10 @@ const Header = () => {
                     <nav className="mobile-nav">
                         <Link to="/" className="mobile-nav-link" onClick={toggleMenu}>Đặt hàng</Link>
                         <Link to="/track-order" className="mobile-nav-link" onClick={toggleMenu}>Tra cứu đơn hàng</Link>
+                        <Link to="/order-history" className="mobile-nav-link" onClick={toggleMenu}>
+                            <History size={16} style={{ marginRight: 8 }} />
+                            Lịch sử đơn hàng
+                        </Link>
                         <Link to="/contact" className="mobile-nav-link" onClick={toggleMenu}>Liên hệ</Link>
                         <Link to="/admin" className="mobile-nav-link admin-link-mobile" onClick={toggleMenu}>
                             <User size={16} style={{ marginRight: 8 }} />
