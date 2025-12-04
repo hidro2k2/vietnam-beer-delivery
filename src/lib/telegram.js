@@ -1,5 +1,5 @@
 // Telegram Bot Configuration
-const TELEGRAM_BOT_TOKEN = '8523016465:AAHKxLLEX3R80J0E0FtUUCANNiQ94UfhUmY';
+const TELEGRAM_BOT_TOKEN = '8523016465:AAHKXLLEX3R8OJ0EOFtUUCANNiQ94UfhUmY';
 const TELEGRAM_CHAT_ID = '6482362126';
 
 // Use serverless function in production, direct API in development
