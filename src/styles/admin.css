@@ -146,11 +146,12 @@
 
 /* Upload Button Styles - Yellow Theme */
 .upload-btn {
-    display: inline-flex;
+    display: flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    padding: 10px 16px;
+    width: 100%;
+    padding: 12px 16px;
     background: #FFD54F;
     color: #5D4037;
     border: none;
@@ -160,6 +161,7 @@
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(255, 213, 79, 0.3);
     transition: all 0.2s ease;
+    text-align: center;
 }
 
 .upload-btn:hover {
@@ -288,7 +290,6 @@
 
     /* Upload button responsive */
     .upload-btn {
-        width: 100%;
         padding: 14px 20px;
         font-size: 1rem;
     }
