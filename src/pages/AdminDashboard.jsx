@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, MapPin, X, BarChart3, Package } from 'lucide-react';
+import { LogOut, MapPin, X, BarChart3, Package, Trash2 } from 'lucide-react';
 import { supabase, formatOrderFromSupabase } from '../lib/supabase';
 import { sendOrderStatusUpdate } from '../lib/telegram';
 import '../styles/admin.css';
@@ -87,6 +87,37 @@ const AdminDashboard = () => {
         } catch (error) {
             console.error('Error updating status:', error);
             alert('Có lỗi khi cập nhật trạng thái!');
+        }
+    };
+
+    const deleteOrder = async (orderCode) => {
+        if (!window.confirm(`Bạn có chắc muốn HỦY và XÓA đơn hàng #${orderCode}?\n\nHành động này không thể hoàn tác!`)) {
+            return;
+        }
+
+        try {
+            const order = orders.find(o => o.id === orderCode);
+
+            const { error } = await supabase
+                .from('orders')
+                .delete()
+                .eq('order_code', orderCode);
+
+            if (error) throw error;
+
+            // Remove from local state
+            setOrders(orders.filter(o => o.id !== orderCode));
+            setSelectedOrder(null);
+
+            // Send Telegram notification
+            if (order) {
+                sendOrderStatusUpdate(orderCode, 'cancelled', order.customer.name);
+            }
+
+            alert('Đã xóa đơn hàng thành công!');
+        } catch (error) {
+            console.error('Error deleting order:', error);
+            alert('Có lỗi khi xóa đơn hàng!');
         }
     };
 
@@ -229,6 +260,15 @@ const AdminDashboard = () => {
                                     onClick={() => updateStatus(selectedOrder.id, 'done')}
                                 >
                                     Hoàn thành đơn
+                                </button>
+                            )}
+                            {(selectedOrder.status === 'pending' || selectedOrder.status === 'delivering') && (
+                                <button
+                                    className="btn btn-danger"
+                                    style={{ background: '#dc3545', color: 'white', display: 'flex', alignItems: 'center', gap: '6px' }}
+                                    onClick={() => deleteOrder(selectedOrder.id)}
+                                >
+                                    <Trash2 size={16} /> Hủy đơn
                                 </button>
                             )}
                         </div>
