@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, X, Save, ArrowLeft, Image as ImageIcon } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, ArrowLeft, Image as ImageIcon, Camera } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import '../styles/admin.css';
 
@@ -17,6 +17,8 @@ const AdminProductManager = () => {
         category: 'beer',
         image_url: ''
     });
+    const [imageFile, setImageFile] = useState(null);
+    const [previewUrl, setPreviewUrl] = useState('');
 
     useEffect(() => {
         checkAdmin();
@@ -56,6 +58,40 @@ const AdminProductManager = () => {
         }));
     };
 
+    const handleImageChange = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            setImageFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+
+    const uploadImage = async (file) => {
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+            const filePath = `${fileName}`;
+
+            const { error: uploadError } = await supabase.storage
+                .from('products')
+                .upload(filePath, file);
+
+            if (uploadError) {
+                throw uploadError;
+            }
+
+            const { data } = supabase.storage
+                .from('products')
+                .getPublicUrl(filePath);
+
+            return data.publicUrl;
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('Lỗi khi upload ảnh!');
+            return null;
+        }
+    };
+
     const openAddModal = () => {
         setEditingProduct(null);
         setFormData({
@@ -65,6 +101,8 @@ const AdminProductManager = () => {
             category: 'beer',
             image_url: ''
         });
+        setImageFile(null);
+        setPreviewUrl('');
         setShowModal(true);
     };
 
@@ -77,18 +115,30 @@ const AdminProductManager = () => {
             category: product.category,
             image_url: product.image_url || ''
         });
+        setImageFile(null);
+        setPreviewUrl(product.image_url || '');
         setShowModal(true);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
+            let imageUrl = formData.image_url;
+
+            // Nếu có file ảnh mới được chọn, upload lên Supabase Storage
+            if (imageFile) {
+                const uploadedUrl = await uploadImage(imageFile);
+                if (uploadedUrl) {
+                    imageUrl = uploadedUrl;
+                }
+            }
+
             const productData = {
                 name: formData.name,
                 description: formData.description,
                 price: parseInt(formData.price),
                 category: formData.category,
-                image_url: formData.image_url || null
+                image_url: imageUrl || null
             };
 
             if (editingProduct) {
@@ -325,9 +375,44 @@ const AdminProductManager = () => {
                                     className="form-input"
                                     style={{ width: '100%', padding: '8px', border: '1px solid #ddd', borderRadius: '4px' }}
                                 />
-                                {formData.image_url && (
+                                {formData.image_url && !imageFile && (
                                     <div style={{ marginTop: '10px', width: '100px', height: '100px', border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden' }}>
                                         <img src={formData.image_url} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => e.target.style.display = 'none'} />
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="form-group" style={{ marginBottom: '20px' }}>
+                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Hoặc Tải ảnh lên</label>
+                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageChange}
+                                        id="file-upload"
+                                        style={{ display: 'none' }}
+                                    />
+                                    <label htmlFor="file-upload" className="btn btn-secondary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px' }}>
+                                        <ImageIcon size={16} /> Chọn ảnh
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={handleImageChange}
+                                        id="camera-upload"
+                                        style={{ display: 'none' }}
+                                    />
+                                    <label htmlFor="camera-upload" className="btn btn-secondary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px' }}>
+                                        <Camera size={16} /> Chụp ảnh
+                                    </label>
+                                </div>
+                                {previewUrl && imageFile && (
+                                    <div style={{ marginTop: '10px' }}>
+                                        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>Ảnh đã chọn: {imageFile.name}</p>
+                                        <div style={{ width: '100px', height: '100px', border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden' }}>
+                                            <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                        </div>
                                     </div>
                                 )}
                             </div>
