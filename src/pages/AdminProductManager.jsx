@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Edit, Trash2, X, Save, ArrowLeft, Image as ImageIcon, Camera } from 'lucide-react';
+import { Plus, Edit, Trash2, X, Save, ArrowLeft, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import '../styles/admin.css';
 
@@ -19,8 +19,6 @@ const AdminProductManager = () => {
     });
     const [imageFile, setImageFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
-    const fileInputRef = useRef(null);
-    const cameraInputRef = useRef(null);
 
     useEffect(() => {
         checkAdmin();
@@ -61,23 +59,10 @@ const AdminProductManager = () => {
     };
 
     const handleImageChange = (e) => {
-        console.log('handleImageChange triggered', e);
         const file = e.target.files?.[0];
-        console.log('File selected:', file);
         if (file) {
-            console.log('File details:', file.name, file.size, file.type);
             setImageFile(file);
-            const objectUrl = URL.createObjectURL(file);
-            console.log('Preview URL created:', objectUrl);
-            setPreviewUrl(objectUrl);
-        } else {
-            console.log('No file selected');
-        }
-    };
-
-    const handleCameraCapture = () => {
-        if (cameraInputRef.current) {
-            cameraInputRef.current.click();
+            setPreviewUrl(URL.createObjectURL(file));
         }
     };
 
@@ -398,46 +383,26 @@ const AdminProductManager = () => {
                             </div>
 
                             <div className="form-group" style={{ marginBottom: '20px' }}>
-                                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Hoặc Tải ảnh lên</label>
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleImageChange}
-                                        ref={fileInputRef}
-                                        id="file-upload"
-                                        style={{ display: 'none' }}
-                                    />
-                                    <label htmlFor="file-upload" className="btn btn-secondary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px' }}>
-                                        <ImageIcon size={16} /> Chọn ảnh
-                                    </label>
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        capture="environment"
-                                        onChange={handleImageChange}
-                                        ref={cameraInputRef}
-                                        id="camera-upload"
-                                        style={{ display: 'none' }}
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={handleCameraCapture}
-                                        className="btn btn-secondary"
-                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px' }}
-                                    >
-                                        <Camera size={16} /> Chụp ảnh
-                                    </button>
-                                </div>
-                                {previewUrl && imageFile && (
-                                    <div style={{ marginTop: '10px' }}>
-                                        <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>Ảnh đã chọn: {imageFile.name}</p>
-                                        <div style={{ width: '100px', height: '100px', border: '1px solid #ddd', borderRadius: '4px', overflow: 'hidden' }}>
-                                            <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        </div>
-                                    </div>
-                                )}
+                                <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>Hoặc Tải ảnh lên</label>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handleImageChange}
+                                    id="file-upload"
+                                    style={{ display: 'none' }}
+                                />
+                                <label htmlFor="file-upload" className="upload-btn">
+                                    <ImageIcon size={18} /> Chọn ảnh
+                                </label>
                             </div>
+                            {previewUrl && imageFile && (
+                                <div style={{ marginTop: '10px' }}>
+                                    <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '5px' }}>Ảnh đã chọn: {imageFile.name}</p>
+                                    <div style={{ width: '120px', height: '120px', border: '1px solid #ddd', borderRadius: '8px', overflow: 'hidden' }}>
+                                        <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    </div>
+                                </div>
+                            )}
 
                             <div className="modal-actions" style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                                 <button type="button" onClick={() => setShowModal(false)} className="btn btn-secondary">

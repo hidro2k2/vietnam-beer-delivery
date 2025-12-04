@@ -34,7 +34,6 @@
     display: flex;
     gap: var(--spacing-md);
     min-width: 1000px;
-    /* Ensure horizontal scroll on small screens */
 }
 
 .kanban-column {
@@ -145,6 +144,34 @@
     gap: 10px;
 }
 
+/* Upload Button Styles - Yellow Theme */
+.upload-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background: #FFD54F;
+    color: #5D4037;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(255, 213, 79, 0.3);
+    transition: all 0.2s ease;
+}
+
+.upload-btn:hover {
+    background: #FFC107;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(255, 193, 7, 0.4);
+}
+
+.upload-btn:active {
+    transform: translateY(0);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .admin-header {
@@ -212,7 +239,6 @@
         border-radius: var(--radius-md);
         box-shadow: var(--shadow-sm);
         border: 1px solid #eee;
-        /* Fallback if var not defined */
     }
 
     .product-table td {
@@ -245,5 +271,32 @@
 
     .product-table td[data-label="Hình ảnh"]::before {
         display: none;
+    }
+
+    /* Form inputs on mobile */
+    .form-group .form-input,
+    .form-group input[type="text"],
+    .form-group input[type="number"],
+    .form-group select {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    .modal-content h3 {
+        font-size: 1.25rem;
+    }
+
+    /* Upload button responsive */
+    .upload-btn {
+        width: 100%;
+        padding: 14px 20px;
+        font-size: 1rem;
+    }
+}
+
+/* Tablet styles */
+@media (max-width: 1024px) {
+    .upload-btn {
+        padding: 12px 20px;
     }
 }
