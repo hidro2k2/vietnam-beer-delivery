@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Edit, Trash2, X, Save, ArrowLeft, Image as ImageIcon, Camera } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -19,6 +19,8 @@ const AdminProductManager = () => {
     });
     const [imageFile, setImageFile] = useState(null);
     const [previewUrl, setPreviewUrl] = useState('');
+    const fileInputRef = useRef(null);
+    const cameraInputRef = useRef(null);
 
     useEffect(() => {
         checkAdmin();
@@ -59,10 +61,23 @@ const AdminProductManager = () => {
     };
 
     const handleImageChange = (e) => {
-        const file = e.target.files[0];
+        console.log('handleImageChange triggered', e);
+        const file = e.target.files?.[0];
+        console.log('File selected:', file);
         if (file) {
+            console.log('File details:', file.name, file.size, file.type);
             setImageFile(file);
-            setPreviewUrl(URL.createObjectURL(file));
+            const objectUrl = URL.createObjectURL(file);
+            console.log('Preview URL created:', objectUrl);
+            setPreviewUrl(objectUrl);
+        } else {
+            console.log('No file selected');
+        }
+    };
+
+    const handleCameraCapture = () => {
+        if (cameraInputRef.current) {
+            cameraInputRef.current.click();
         }
     };
 
@@ -389,6 +404,7 @@ const AdminProductManager = () => {
                                         type="file"
                                         accept="image/*"
                                         onChange={handleImageChange}
+                                        ref={fileInputRef}
                                         id="file-upload"
                                         style={{ display: 'none' }}
                                     />
@@ -400,12 +416,18 @@ const AdminProductManager = () => {
                                         accept="image/*"
                                         capture="environment"
                                         onChange={handleImageChange}
+                                        ref={cameraInputRef}
                                         id="camera-upload"
                                         style={{ display: 'none' }}
                                     />
-                                    <label htmlFor="camera-upload" className="btn btn-secondary" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px' }}>
+                                    <button
+                                        type="button"
+                                        onClick={handleCameraCapture}
+                                        className="btn btn-secondary"
+                                        style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', padding: '8px 12px' }}
+                                    >
                                         <Camera size={16} /> Chụp ảnh
-                                    </label>
+                                    </button>
                                 </div>
                                 {previewUrl && imageFile && (
                                     <div style={{ marginTop: '10px' }}>
